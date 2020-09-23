@@ -8,6 +8,13 @@
 #define GAME_WINDOW_BAR		0	//タイトルバーはデフォルトにする
 #define GAME_WINDOW_NAME	"Dxlib_Movie"	//ウィンドウのタイトル
 
+//MOVIEフォルダと、mp4ファイルも、追加して下さい
+#define MOVIE_PATH			"..\\MOVIE\\Fireworks.mp4"	//動画の
+
+int handle = -1;	//動画のハンドル
+
+
+//########## プログラムで最初に実行される関数 ##########
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	SetOutApplicationLogValidFlag(FALSE);				//log.txtを出力しない
@@ -19,9 +26,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	if (DxLib_Init() == -1) { return -1; }	//ＤＸライブラリ初期化処理
 
-	DrawString(0, 0, "動画を再生しています・・・", GetColor(255, 255, 255));
 
-	ScreenFlip();		//モニタのリフレッシュレートの速さで裏画面を再描画
+	//動画の読み込み
+	handle = LoadGraph(MOVIE_PATH);
+
+
+	//無限ループ
+	while (TRUE)
+	{
+		if (ProcessMessage() != 0) { break; }	//メッセージ処理の結果がエラーのとき、強制終了
+		if (ClearDrawScreen() != 0) { break; }	//画面を消去できなかったとき、強制終了
+
+		if (GetMovieStateToGraph(handle) == 0)
+		{
+			SeekMovieToGraph(handle, 0);	//動画の再生バーを最初からにする
+			PlayMovieToGraph(handle);		//動画を再生状態にする
+		}
+
+		//タイトル動画描画
+		DrawGraph(0, 0, handle, FALSE);
+
+
+		DrawString(0, 0, "動画を再生しています・・・", GetColor(255, 255, 255));
+
+		ScreenFlip();		//モニタのリフレッシュレートの速さで裏画面を再描画
+	}
 
 	DxLib_End();	//ＤＸライブラリ使用の終了処理
+
+	DeleteGraph(handle);	//動画の削除
+
 }
